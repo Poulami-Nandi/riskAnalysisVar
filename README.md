@@ -74,11 +74,30 @@ To install the necessary dependencies, simply clone the repository and install t
 ```bash
 git clone https://github.com/Poulami-Nandi/riskAnalysisVar.git
 Install required packages
-```bash
 pip install -r requirements.txt
 ```
 ---
+## Project Folder Structure
 
+riskAnalysisVar/
+│
+├── data/
+│   └── historical_data.csv      # Store downloaded data 
+│
+├── src/
+│   └── riskAnalysisVar.py        # Python file for VaR calculation
+│
+├── results/
+│   └── vaR_results.csv          # Store the results of the different VaR methods
+│
+├── notebooks/
+│   └── riskAnalysisVar.ipynb  # Jupyter notebook with explanation and analysis
+│
+└── README.md                    # Project description and instructions
+└── requirements.txt             # requirements.txt file
+
+
+---
 ## Usage
 - Clone the repository.
 - Download financial data using Yahoo Finance (the stock tickers in the portfolio can be customized).
