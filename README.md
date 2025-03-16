@@ -78,7 +78,7 @@ pip install -r requirements.txt
 ```
 ---
 ## Project Folder Structure
-
+```bash
 riskAnalysisVar/
 │
 ├── data/
@@ -95,7 +95,7 @@ riskAnalysisVar/
 │
 └── README.md                    # Project description and instructions
 └── requirements.txt             # requirements.txt file
-
+```
 
 ---
 ## Usage
