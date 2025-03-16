@@ -141,11 +141,13 @@ Additional work could involve optimizing the portfolio to minimize risk and maxi
 This project is licensed under the MIT License - see the LICENSE file for details.
 
 ---
-##References
-Value at Risk (VaR) Methods: Wikipedia
-Monte Carlo Simulation: Wikipedia
-Yahoo Finance API: yfinance GitHub
-Contributing
+## References
+Value at Risk (VaR) Methods: [Wikipedia](https://en.wikipedia.org/wiki/Value_at_risk)  
+Monte Carlo Simulation: [Wikipedia](https://en.wikipedia.org/wiki/Monte_Carlo_method)  
+Yahoo Finance API: [yfinance GitHub](https://github.com/ranaroussi/yfinance)  
+
+---
+## Contributing
 
 Feel free to open an issue or create a pull request if you have any suggestions or improvements to the project!
 
