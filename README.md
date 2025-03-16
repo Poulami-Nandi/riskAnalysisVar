@@ -1,4 +1,4 @@
-# Quantitative Risk Analysis with Value at Risk (VaR) - OOP Implementation
+# Quantitative Risk Analysis with Value at Risk (VaR)
 
 ## Overview
 
