@@ -274,3 +274,144 @@ def visualize_risk_measures(cvar, es):
 
 # Visualize CVaR and ES
 visualize_risk_measures(cvar, es)
+
+"""# Value at Risk (VaR) Calculation and Portfolio Optimization
+
+This notebook demonstrates the calculation of Value at Risk (VaR) for a portfolio of financial assets using three different methods: Historical VaR, Parametric VaR, and Monte Carlo VaR. The code provided allows for the analysis of various weight combinations for the assets in the portfolio, calculating and visualizing the VaR for each combination.
+
+#### Key Features:
+- **Data Fetching**: The `VaRCalculation` class fetches historical price data for a list of tickers using the `yfinance` library.
+- **VaR Calculation**: The three different methods for calculating VaR are:
+  1. **Historical VaR**: Based on historical returns and calculated using percentiles.
+  2. **Parametric VaR**: Assumes a normal distribution of returns and calculates VaR using the mean and standard deviation.
+  3. **Monte Carlo VaR**: Uses Monte Carlo simulation to generate a distribution of potential portfolio returns and calculates VaR from this simulated data.
+- **Weight Optimization**: The class tries different weight combinations for the tickers in the portfolio (step size of 1%) to calculate the corresponding VaR values.
+- **Visualization**: The results are displayed in tabular form and the best combinations (with the lowest VaR) are visualized using bar plots for comparison.
+
+#### Example Usage:
+The class `VaRCalculation` is initialized with the list of tickers, start date, and end date. It fetches the historical data, calculates VaR using all three methods, and displays the results in a sorted table along with visualizations for the best performing weight combinations.
+
+### Key Metrics:
+- **Historical VaR**: Value-at-risk based on historical returns.
+- **Parametric VaR**: Value-at-risk assuming a normal distribution of returns.
+- **Monte Carlo VaR**: Value-at-risk based on simulated returns from a Monte Carlo simulation.
+
+### class VaRCalculation with min_weight, max_weight, step size
+"""
+
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+import yfinance as yf
+from scipy.stats import norm
+
+# Class to calculate and visualize VaR (Value at Risk)
+class VaRCalculation:
+    def __init__(self, tickers, start_date, end_date):
+        self.tickers = tickers
+        self.start_date = start_date
+        self.end_date = end_date
+        self.data = None
+        self.weights = None
+
+    def fetch_data(self):
+        """Fetch historical data for tickers"""
+        self.data = yf.download(self.tickers, start=self.start_date, end=self.end_date)['Close']
+        self.data = self.data.pct_change().dropna()  # Daily returns
+
+    def calculate_var(self, weights, var_type='parametric'):
+        """Calculate Value at Risk based on specified type"""
+        # Weighted returns for the portfolio
+        portfolio_returns = np.dot(self.data, weights)
+
+        if var_type == 'historical':
+            return self.calculate_historical_var(portfolio_returns)
+        elif var_type == 'parametric':
+            return self.calculate_parametric_var(portfolio_returns)
+        elif var_type == 'monte_carlo':
+            return self.calculate_monte_carlo_var(portfolio_returns)
+
+    def calculate_historical_var(self, portfolio_returns, confidence_level=0.95):
+        """Calculate Historical VaR"""
+        var = np.percentile(portfolio_returns, (1 - confidence_level) * 100)
+        return var
+
+    def calculate_parametric_var(self, portfolio_returns, confidence_level=0.95):
+        """Calculate Parametric VaR using normal distribution"""
+        mean = np.mean(portfolio_returns)
+        std_dev = np.std(portfolio_returns)
+        var = mean + norm.ppf(1 - confidence_level) * std_dev
+        return var
+
+    def calculate_monte_carlo_var(self, portfolio_returns, num_simulations=10000, confidence_level=0.95):
+        """Calculate VaR using Monte Carlo simulation"""
+        simulations = np.random.choice(portfolio_returns, (num_simulations, len(portfolio_returns)))
+        simulated_returns = simulations.mean(axis=1)
+        var = np.percentile(simulated_returns, (1 - confidence_level) * 100)
+        return var
+
+    def try_all_combinations(self, min_weight=0.01, max_weight=1.0, step=0.01, confidence_level=0.95):
+        """Test all possible weight combinations and calculate VaR for each"""
+        results = []
+
+        # Generate all weight combinations for 3 assets
+        num_assets = len(self.tickers)  # Get the number of assets
+
+        # Iterate through possible weight combinations, ensuring they sum to 1
+        for i in np.arange(min_weight, max_weight, step):
+            for j in np.arange(min_weight, max_weight, step):
+                if (i + j) < 1: # Check if the sum of weights is less than 1
+                    k = 1- (i+j) # Calculate the weight for the third asset
+                    if k >= min_weight and k <= max_weight:
+                        weights = [i, j, k]
+                        historical_var = self.calculate_var(weights, var_type='historical')
+                        parametric_var = self.calculate_var(weights, var_type='parametric')
+                        monte_carlo_var = self.calculate_var(weights, var_type='monte_carlo')
+                        results.append((weights[0], weights[1], weights[2], historical_var, parametric_var, monte_carlo_var))
+
+        # Convert results to DataFrame
+        results_df = pd.DataFrame(results, columns=["Weight (Ticker 1)", "Weight (Ticker 2)", "Weight (Ticker 3)", "Historical VaR", "Parametric VaR", "Monte Carlo VaR"])
+        results_df.sort_values(by="Historical VaR", ascending=True, inplace=True)
+        print("Results (Sorted by Historical VaR):")
+        print(results_df.head(10))  # Display top 10 results
+
+        # Plot the two best VaR combinations
+        self.plot_best_var_combinations(results_df)
+
+    def plot_best_var_combinations(self, results_df):
+        """Plot the best VaR combinations"""
+        best_combination = results_df.iloc[0]
+
+        # Get the best weight and VaR values
+        best_weight = best_combination['Weight (Ticker 1)']
+        historical_var = best_combination['Historical VaR']
+        parametric_var = best_combination['Parametric VaR']
+        monte_carlo_var = best_combination['Monte Carlo VaR']
+
+        # Plot the results
+        plt.figure(figsize=(10, 6))
+        # annonate this plot
+
+        plt.bar(['Historical VaR', 'Parametric VaR', 'Monte Carlo VaR'],
+                [historical_var, parametric_var, monte_carlo_var], color='skyblue')
+        plt.title(f'VaR Comparison for Best Weight Combination (Weight = {best_weight:.2f})')
+        # annotate this plt values
+        plt.text(0, historical_var, f'Historical VaR: {historical_var:.2f}', ha='center', va='bottom')
+        plt.text(1, parametric_var, f'Parametric VaR: {parametric_var:.2f}', ha='center', va='bottom')
+        plt.text(2, monte_carlo_var, f'Monte Carlo VaR: {monte_carlo_var:.2f}', ha='center', va='bottom')
+        plt.xlabel('VaR Methods')
+        plt.ylabel('VaR')
+        plt.show()
+
+# Example usage
+tickers = ['AAPL', 'GOOG', 'TSLA']
+start_date = '2019-01-01'
+end_date = '2025-03-01'
+
+# Instantiate the VaRCalculation class
+var_calc = VaRCalculation(tickers, start_date, end_date)
+var_calc.fetch_data()  # Fetch the data
+
+# Try all weight combinations and calculate VaR for each
+var_calc.try_all_combinations(min_weight=0.01, max_weight=1.0, step=0.05)
+
